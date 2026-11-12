@@ -52,9 +52,10 @@ To solve this without manual tournament screenshot labeling, we combine **Knowle
                      Runs 100% offline via CPU ONNX Runtime (~50 ms)
 ```
 
-Dual outputs at inference:
-1. **`logits` -> `top_probabilities` (`136` classes):** Calibrated class probability across 135 heroes + `EMPTY_OR_UNKNOWN` (`hero: null` when slot is unpicked/locked).
+Dual outputs at inference + **Out-of-Distribution (OOD) Rejection Gate**:
+1. **`logits` -> `top_probabilities` (`136` classes):** Calibrated class probability across 135 heroes + `EMPTY_OR_UNKNOWN`.
 2. **`embedding` (`768-d`) -> `top_candidates` (`1,725` assets):** Nearest-neighbor asset match showing exact hero shape/skin source metadata.
+3. **5-Signal OOD Rejection Gate:** Automatically rejects non-MLBB images (human faces, UI screenshots, battle spells alone, blurry noise) returning `"hero": null`, `"is_mlbb_hero": false`, and `"rejection_reason"` whenever `confidence < 0.52`, `prob_margin < 0.30`, `proto_cos < 0.27`, `db_top1 < 0.885`, or `entropy > 2.75`.
 
 ---
 

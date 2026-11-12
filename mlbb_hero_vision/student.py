@@ -110,6 +110,11 @@ class HeroVision:
         hero_assets_dir: str | Path | None = None,
         auto_download: bool = True,
         providers: list[str] | None = None,
+        min_confidence: float = 0.52,
+        min_margin: float = 0.30,
+        min_proto_cos: float = 0.27,
+        min_db_sim: float = 0.885,
+        max_entropy: float = 2.75,
     ) -> None:
         import onnxruntime as ort
 
@@ -119,6 +124,11 @@ class HeroVision:
 
         self.model_dir = root
         self.hero_assets_dir = Path(hero_assets_dir) if hero_assets_dir else None
+        self.min_confidence = min_confidence
+        self.min_margin = min_margin
+        self.min_proto_cos = min_proto_cos
+        self.min_db_sim = min_db_sim
+        self.max_entropy = max_entropy
         self.sess = ort.InferenceSession(
             str(root / "hero_student.onnx"),
             providers=providers or ["CPUExecutionProvider"],
@@ -139,15 +149,21 @@ class HeroVision:
         x = _preprocess(img)
         emb, logits = self.sess.run(None, {"pixel_values": x})
         qv = emb[0].astype(np.float32)
-        probs = _softmax(logits[0].astype(np.float32))
+        raw_logits = logits[0].astype(np.float32)
+        probs = _softmax(raw_logits)
         latency_ms = round((time.perf_counter() - t0) * 1000, 1)
 
+        sorted_probs = np.sort(probs)
         top_cls_idx = int(np.argmax(probs))
         top_cls_name = self.labels[top_cls_idx]
         top_cls_prob = float(probs[top_cls_idx])
+        prob_margin = float(top_cls_prob - sorted_probs[-2]) if len(sorted_probs) > 1 else top_cls_prob
+        proto_cos = float(raw_logits[top_cls_idx] / 18.0)
+        entropy = float(-np.sum(probs * np.log(np.clip(probs, 1e-8, 1.0))))
 
         scores = self.db_mat @ qv
         order = np.argsort(-scores)
+        db_top1 = float(scores[order[0]]) if len(order) > 0 else 0.0
         by_hero: dict[str, dict[str, Any]] = {}
         for idx in order:
             m = self.meta[int(idx)]
@@ -166,10 +182,32 @@ class HeroVision:
                 if len(by_hero) >= top_k:
                     break
 
+        rejection_reasons: list[str] = []
+        if top_cls_name == "EMPTY_OR_UNKNOWN":
+            rejection_reasons.append("empty_or_unknown_class")
+        else:
+            if top_cls_prob < self.min_confidence:
+                rejection_reasons.append(f"low_confidence({top_cls_prob:.3f}<{self.min_confidence})")
+            if prob_margin < self.min_margin:
+                rejection_reasons.append(f"low_margin({prob_margin:.3f}<{self.min_margin})")
+            if proto_cos < self.min_proto_cos:
+                rejection_reasons.append(f"low_proto_cos({proto_cos:.3f}<{self.min_proto_cos})")
+            if db_top1 < self.min_db_sim:
+                rejection_reasons.append(f"low_db_sim({db_top1:.3f}<{self.min_db_sim})")
+            if entropy > self.max_entropy:
+                rejection_reasons.append(f"high_entropy({entropy:.2f}>{self.max_entropy})")
+
+        accepted = len(rejection_reasons) == 0
         return {
-            "hero": None if top_cls_name == "EMPTY_OR_UNKNOWN" else top_cls_name,
+            "hero": top_cls_name if accepted else None,
+            "is_mlbb_hero": accepted,
             "raw_choice": top_cls_name,
             "confidence": round(top_cls_prob, 4),
+            "prob_margin": round(prob_margin, 4),
+            "proto_cos": round(proto_cos, 4),
+            "db_top1": round(db_top1, 4),
+            "entropy": round(entropy, 4),
+            "rejection_reason": None if accepted else ", ".join(rejection_reasons),
             "latency_ms": latency_ms,
             "engine": "distilled-convnext-tiny-onnx",
             "top_probabilities": [

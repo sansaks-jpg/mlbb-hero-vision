@@ -188,8 +188,10 @@ detectBtn.addEventListener('click', async () => {
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Request failed');
-    document.getElementById('finalHero').textContent = data.hero || 'EMPTY / UNKNOWN';
-    document.getElementById('finalSource').textContent = `Engine: ${data.engine}`;
+    document.getElementById('finalHero').textContent = data.hero || 'NOT AN MLBB HERO / UNKNOWN';
+    document.getElementById('finalSource').textContent = data.rejection_reason
+      ? `Rejected (${data.rejection_reason})`
+      : `Engine: ${data.engine}`;
     document.getElementById('finalConf').textContent = `${(data.confidence * 100).toFixed(2)}%`;
     document.getElementById('timingInfo').textContent = `${data.latency_ms} ms (CPU)`;
     const list = document.getElementById('candList');
