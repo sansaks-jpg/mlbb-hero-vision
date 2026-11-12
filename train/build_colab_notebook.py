@@ -33,8 +33,25 @@ cells = [
         "metadata": {},
         "outputs": [],
         "source": [
-            "# Point --data-dir to your dataset folder (containing per-hero images and optional _distill/gemini_embedding_index.npz)\n",
-            "# !python train/train_distill.py --data-dir /content/drive/MyDrive/hero-ml --out-dir ./models --epochs 18\n",
+            "# Option A: Mount Google Drive if your hero images live in /content/drive/MyDrive/hero-ml\n",
+            "# from google.colab import drive\n",
+            "# drive.mount('/content/drive')\n",
+            "\n",
+            "# Point --data-dir to your dataset folder (either <data-dir>/<HeroName>/*.png or multi-source layout)\n",
+            "# Optionally include _distill/gemini_embedding_index.npz & gemini_embedding_meta.json for teacher distillation.\n",
+            "!python train/train_distill.py --data-dir /content/drive/MyDrive/hero-ml --out-dir ./models --epochs 18 --batch-size 64\n",
+        ],
+    },
+    {
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
+        "source": [
+            "# Test the newly exported ONNX model offline\n",
+            "from mlbb_hero_vision import HeroVision\n",
+            "vision = HeroVision(model_dir='./models', auto_download=False)\n",
+            "print('Loaded classes:', len(vision.labels))\n",
         ],
     },
 ]

@@ -14,7 +14,19 @@ import numpy as np
 from PIL import Image
 
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MODEL_DIR = Path(os.environ.get("MLBB_HERO_MODEL_DIR", str(PACKAGE_ROOT / "models")))
+
+
+def _resolve_default_model_dir() -> Path:
+    env_dir = os.environ.get("MLBB_HERO_MODEL_DIR")
+    if env_dir:
+        return Path(env_dir)
+    repo_models = PACKAGE_ROOT / "models"
+    if repo_models.is_dir() and os.access(repo_models, os.W_OK):
+        return repo_models
+    return Path.home() / ".cache" / "mlbb-hero-vision"
+
+
+DEFAULT_MODEL_DIR = _resolve_default_model_dir()
 HF_REPO_ID = "sansaks/mlbb-hero-vision"
 GH_RELEASE_TAG = "v1.0.0"
 GH_REPO_SLUG = "sansaks-jpg/mlbb-hero-vision"

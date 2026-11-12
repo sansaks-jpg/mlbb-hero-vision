@@ -20,7 +20,7 @@ gemini = ["google-genai>=1.0.0"]
 dev = ["huggingface_hub>=0.24.0"]
 
 [project.scripts]
-mlbb-hero-predict = "predict:main"
+mlbb-hero-predict = "mlbb_hero_vision.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["mlbb_hero_vision*"]

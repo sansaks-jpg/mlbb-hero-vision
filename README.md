@@ -74,6 +74,8 @@ Trained on Kaggle GPU (`Tesla T4`, PyTorch `2.11.0+cu130`, `AdamW lr=2.5e-4`, `C
 
 Total Kaggle training + export runtime: **917.5s (~15.3 min)**.
 
+> **Checkpoint note (`v1.0.0`):** The released `v1.0.0` ONNX weights were trained on Kaggle (`v2` run) using dark edge gradients + full spell/IGN/flag/crop/JPEG tournament augmentations, and already scored **60/60 (100.0%)** on both Blue Team and Red Team gradient stress tests below. [`train/train_distill.py`](train/train_distill.py) additionally randomizes explicit Blue, Red, and Neutral Dark team edge gradients (`left` / `right` / `bottom`) when retraining.
+
 ### Inference Benchmarks (`CPUExecutionProvider` on AMD Ryzen 5 6600H)
 
 | Evaluation Suite | Samples | Top-1 Accuracy | Top-5 Accuracy | Avg CPU Latency |
@@ -94,7 +96,11 @@ git clone https://github.com/sansaks-jpg/mlbb-hero-vision.git
 cd mlbb-hero-vision
 pip install -r requirements.txt
 ```
-*(Or install directly as a package: `pip install git+https://github.com/sansaks-jpg/mlbb-hero-vision.git`)*
+Or install directly via pip (adds `mlbb-hero-predict` command & caches weights cleanly in `~/.cache/mlbb-hero-vision`):
+```bash
+pip install git+https://github.com/sansaks-jpg/mlbb-hero-vision.git
+mlbb-hero-predict --image hero_slot.png
+```
 
 ### 2. Python API
 On first run, `HeroVision()` automatically downloads the 4 model files (`hero_student.onnx`, `hero_student_db.npz`, `hero_student_labels.json`, `hero_student_meta.json`) into `./models/` from Hugging Face (with GitHub Release fallback):

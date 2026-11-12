@@ -315,6 +315,8 @@ def train(args: argparse.Namespace) -> None:
             raw, shape = stem, "ban"
         elif top in {"HeroPick1-canvas", "HeroPick-custom-draftpick"}:
             raw, shape = stem, "pick"
+        elif len(parts) == 2:
+            raw, shape = parts[0], "custom"
         else:
             raw, shape = stem, top
         hero = canonical.get(slugify(raw), re.sub(r"[_-]+", " ", raw).strip().title() or "Unknown")
