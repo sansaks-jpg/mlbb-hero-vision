@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlbb-hero-vision"
+version = "1.0.0"
+description = "100% offline MLBB tournament hero recognition distilled from Gemini Embedding 2 into ConvNeXt-Tiny ONNX"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "onnxruntime>=1.17.0",
+  "numpy>=1.24.0",
+  "pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+gemini = ["google-genai>=1.0.0"]
+dev = ["huggingface_hub>=0.24.0"]
+
+[project.scripts]
+mlbb-hero-predict = "predict:main"
+
+[tool.setuptools.packages.find]
+include = ["mlbb_hero_vision*"]
