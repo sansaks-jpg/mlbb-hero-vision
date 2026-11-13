@@ -87,6 +87,17 @@ Total Kaggle training + export runtime: **917.5s (~15.3 min)**.
 | Real Broadcast Cropped Frame (`Alpha` + Retribution) | `1` | **`Alpha` (`89.68%` conf)** | `#2 Saber 0.55%` | `52.6–65.8 ms` |
 | Empty / Locked Slot Probe | `1` | **`EMPTY_OR_UNKNOWN` (`92.13%`)** | — | `~50 ms` |
 
+### v1.1.0 Main vs Quantized ONNX Models (Hugging Face)
+
+All quantized variants are exported from `v1.1.0` (`hero_student.onnx`) with **head-protected quantization** (keeping the projection & classifier head in FP32 so the 5-signal OOD rejection gate remains sharp). Benchmarked on Kaggle `CPUExecutionProvider`:
+
+| Variant | File | Size | Avg CPU Latency (Kaggle) | Clean Recall (`79` heroes) | Grayscale Recall (`79` heroes) | OOD Rejected |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **FP32 (Main)** | `hero_student.onnx` | `108.87 MB` | `155.2 ms` | **`79/79 (100.0%)`** | **`79/79 (100.0%)`** | **`2/2 (100%)`** |
+| **FP16 (Half)** | `hero_student_fp16.onnx` | `54.51 MB` | `159.1 ms` | **`79/79 (100.0%)`** | **`79/79 (100.0%)`** | **`2/2 (100%)`** |
+| **INT8 (Dynamic)** | `hero_student_int8.onnx` | **`46.73 MB`** | **`135.8 ms`** | **`79/79 (100.0%)`** | **`79/79 (100.0%)`** | **`2/2 (100%)`** |
+| **UINT8 (Dynamic)** | `hero_student_uint8.onnx` | **`46.73 MB`** | `171.8 ms` | **`79/79 (100.0%)`** | **`79/79 (100.0%)`** | **`2/2 (100%)`** |
+
 ---
 
 ## Quick Start
