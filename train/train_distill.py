@@ -61,6 +61,19 @@ NORM_TF = transforms.Compose(
     ]
 )
 
+SHAPE_TRAIN_TF = transforms.Compose(
+    [
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomApply([transforms.ColorJitter(brightness=0.35, contrast=0.35, saturation=0.45, hue=0.12)], p=0.65),
+        transforms.RandomGrayscale(p=0.20),
+        transforms.RandomApply([transforms.RandomPerspective(distortion_scale=0.18, p=1.0)], p=0.30),
+        transforms.RandomApply([transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.4))], p=0.20),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.RandomErasing(p=0.30, scale=(0.04, 0.16), ratio=(0.4, 2.5), value=0),
+    ]
+)
+
 
 def slugify(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", text.lower())
@@ -231,7 +244,8 @@ class TournamentDistillDataset(Dataset):
         tvec = rec["teacher_vec"]
         has_tv = 1.0 if tvec is not None else 0.0
         tv_arr = torch.from_numpy(tvec.copy()) if tvec is not None else torch.from_numpy(self.zero_vec)
-        return NORM_TF(proc), self.h2i[rec["hero"]], tv_arr, torch.tensor(has_tv)
+        tf = SHAPE_TRAIN_TF if (self.is_train and random.random() < 0.50) else NORM_TF
+        return tf(proc), self.h2i[rec["hero"]], tv_arr, torch.tensor(has_tv)
 
 
 class HeroStudentNet(nn.Module):

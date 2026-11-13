@@ -28,7 +28,7 @@ def _resolve_default_model_dir() -> Path:
 
 DEFAULT_MODEL_DIR = _resolve_default_model_dir()
 HF_REPO_ID = "sansaks/mlbb-hero-vision"
-GH_RELEASE_TAG = "v1.0.0"
+GH_RELEASE_TAG = "v1.1.0"
 GH_REPO_SLUG = "sansaks-jpg/mlbb-hero-vision"
 
 MODEL_FILES = (
